@@ -16,19 +16,29 @@ class PartyTests(unittest.TestCase):
         self.assertIn(b"board games, rainbows, and ice cream sundaes", result.data)
 
     def test_no_rsvp_yet(self):
-        # FIXME: Add a test to show we see the RSVP form, but NOT the
-        # party details
+        """Test that we DO show the RSVP form if the user has not RSVP'd"""
         result = self.client.get("/")
         self.assertIn(b'<h2>Please RSVP</h2>', result.data)
 
     def test_rsvp(self):
+
+        """Test that we don't show the RSVP form if a user has RSVP'd"""
+
+        app.config['SECRET_KEY'] = 'secret'
+
+        with self.client as c:
+            with c.session_transaction() as sess:
+                sess['RSVP'] = True
+
         result = self.client.post("/rsvp",
                                   data={"name": "Jane",
                                         "email": "jane@jane.com"},
                                   follow_redirects=True)
+
+        self.assertIn(b'<h2>Party Details</h2>', result.data)
+        self.assertNotIn(b'<h2>Please RSVP</h2>', result.data)
         # FIXME: Once we RSVP, we should see the party details, but
         # not the RSVP form
-        print("FIXME")
 
 
 
